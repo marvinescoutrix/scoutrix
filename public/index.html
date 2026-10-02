@@ -1,0 +1,1889 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>KSA Competition Management</title>
+    <style>
+      :root {
+        color-scheme: light;
+        --ksa-green: #007a3d;
+        --ksa-red: #ce1126;
+        --ksa-black: #080808;
+        --ksa-white: #ffffff;
+        --ksa-dark: var(--ksa-black);
+        --panel: var(--ksa-white);
+        --border: rgba(0,122,61,0.2);
+        --muted: #14532d;
+        --danger: var(--ksa-red);
+        --surface-soft: rgba(0,122,61,0.045);
+        --shadow-card: 0 8px 28px rgba(8,8,8,0.055);
+        --radius-card: 18px;
+      }
+      * { box-sizing: border-box; }
+      html { scroll-behavior: smooth; }
+      body {
+        margin: 0;
+        font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+        background: #f7f9f7;
+        color: var(--ksa-dark);
+        line-height: 1.55;
+      }
+      header {
+        position: sticky;
+        top: 0;
+        z-index: 10;
+        background: linear-gradient(105deg, var(--ksa-green), #00582d 68%, var(--ksa-black));
+        color: var(--ksa-white);
+        padding: 0.9rem clamp(1rem, 4vw, 3.5rem);
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 1.25rem;
+        box-shadow: 0 8px 24px rgba(0,0,0,0.16);
+      }
+      header > div { flex: 0 0 auto; }
+      header strong { display: block; font-size: 1.18rem; letter-spacing: 0.09em; line-height: 1.2; }
+      header span { display: block; margin-top: 0.2rem; font-size: 0.85rem; opacity: 0.85; }
+      h1, h2, h3, h4 { margin: 0 0 0.7rem; line-height: 1.2; letter-spacing: -0.025em; }
+      h1 { font-size: clamp(2rem, 4vw, 3.2rem); }
+      h2 { font-size: clamp(1.25rem, 2vw, 1.65rem); }
+      h3 { font-size: 1.12rem; }
+      p { margin-top: 0; }
+      nav { display: flex; gap: 0.55rem; align-items: center; justify-content: flex-end; flex-wrap: wrap; }
+      button {
+        min-height: 44px;
+        border: 1px solid transparent;
+        border-radius: 11px;
+        padding: 0.68rem 1rem;
+        cursor: pointer;
+        font: inherit;
+        font-weight: 700;
+        background: var(--ksa-green);
+        color: var(--ksa-white);
+        transition: background-color 140ms ease, color 140ms ease, border-color 140ms ease, transform 140ms ease;
+      }
+      button:hover:not(:disabled) { background: #005f30; transform: translateY(-1px); }
+      button:disabled { opacity: 0.6; cursor: not-allowed; }
+      button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-visible, summary:focus-visible {
+        outline: 3px solid var(--ksa-red);
+        outline-offset: 2px;
+      }
+      nav button {
+        min-height: 42px;
+        padding: 0.58rem 0.85rem;
+        background: rgba(255,255,255,0.1);
+        color: var(--ksa-white);
+      }
+      nav button:hover, nav button.active { background: var(--ksa-red); color: var(--ksa-white); }
+      nav #header-sign-in { background: var(--ksa-white); color: var(--ksa-black); }
+      nav #header-sign-in:hover { background: var(--ksa-red); color: var(--ksa-white); }
+      nav #header-organizer-setup { background: transparent; color: var(--ksa-white); border-color: rgba(255,255,255,0.55); }
+      main {
+        max-width: 1420px;
+        margin: 0 auto;
+        padding: clamp(1.1rem, 3vw, 2.5rem) clamp(1rem, 3vw, 2.5rem) 4rem;
+      }
+      .page { display: none; }
+      .page.active { display: block; animation: page-enter 180ms ease-out; }
+      .demo-warning {
+        margin: 1rem auto 0;
+        max-width: 1370px;
+        padding: 0.85rem 1rem;
+        border: 2px solid var(--ksa-red);
+        border-radius: 12px;
+        background: #fff2f3;
+        color: var(--ksa-black);
+        font-weight: 700;
+      }
+      @keyframes page-enter { from { opacity: 0.7; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
+      .grid { display: grid; gap: 1.15rem; grid-template-columns: repeat(auto-fit, minmax(min(100%, 245px), 1fr)); }
+      .card {
+        min-width: 0;
+        background: var(--ksa-white);
+        border: 1px solid var(--border);
+        border-radius: var(--radius-card);
+        padding: clamp(1rem, 2vw, 1.4rem);
+        box-shadow: var(--shadow-card);
+      }
+      .kpi { display: flex; flex-direction: column; justify-content: center; gap: 0.2rem; min-height: 108px; }
+      .kpi strong { font-size: clamp(1.8rem, 3vw, 2.35rem); display: block; line-height: 1.1; color: var(--ksa-green); }
+      .muted { color: var(--muted); }
+      form { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 250px), 1fr)); gap: 1rem; }
+      label { display: grid; gap: 0.45rem; font-size: 0.92rem; font-weight: 650; color: var(--muted); }
+      input, select, textarea {
+        width: 100%;
+        min-height: 46px;
+        padding: 0.7rem 0.85rem;
+        border-radius: 11px;
+        border: 1px solid rgba(0,122,61,0.3);
+        font: inherit;
+        color: var(--ksa-black);
+        background: var(--ksa-white);
+      }
+      input::placeholder, textarea::placeholder { color: rgba(20,83,45,0.65); }
+      textarea { min-height: 120px; resize: vertical; }
+      button[type="submit"] { background: var(--ksa-green); color: var(--ksa-white); }
+      .secondary { background: var(--ksa-white); border-color: var(--ksa-green); color: var(--ksa-green); }
+      .secondary:hover { background: var(--ksa-green); color: var(--ksa-white); }
+      table { width: 100%; border-collapse: collapse; margin-top: 0.8rem; }
+      th, td { border-bottom: 1px solid var(--border); padding: 0.82rem 0.7rem; text-align: left; vertical-align: top; }
+      th { background: var(--surface-soft); color: var(--muted); font-size: 0.82rem; text-transform: uppercase; letter-spacing: 0.045em; }
+      tbody tr:hover { background: rgba(0,122,61,0.035); }
+      .badge { display: inline-block; padding: 0.25rem 0.65rem; border-radius: 999px; background: var(--ksa-green); color: var(--ksa-white); font-weight: 750; font-size: 0.78rem; }
+      .news-item { border-left: 4px solid var(--ksa-red); padding: 0.15rem 0 0.15rem 0.85rem; }
+      .form-message { min-height: 1.25rem; margin: 0.5rem 0 0; font-weight: 700; }
+      dialog {
+        width: min(520px, calc(100% - 2rem));
+        max-height: min(90vh, 820px);
+        overflow: auto;
+        border: 1px solid var(--border);
+        border-radius: 20px;
+        padding: clamp(1.2rem, 4vw, 2rem);
+        box-shadow: 0 24px 80px rgba(0,0,0,0.28);
+      }
+      dialog::backdrop { background: rgba(8,8,8,0.68); backdrop-filter: blur(3px); }
+      .dialog-actions { display: flex; justify-content: flex-end; gap: 0.75rem; margin-top: 1rem; }
+      .assessment-part { margin: 1.5rem 0; padding: 1.2rem 0 0; border-top: 1px solid var(--border); }
+      .assessment-part h3 { color: var(--ksa-green); }
+      .rubric-criterion { padding: 1rem; margin: 0.75rem 0; border: 1px solid var(--border); border-radius: 14px; background: var(--surface-soft); }
+      .criterion-score { max-width: 240px; border-left: 4px solid var(--ksa-green); }
+      .signature-grid { display: grid; grid-template-columns: repeat(auto-fit,minmax(min(100%, 260px),1fr)); gap: 1rem; }
+      .signature-pad { display: block; width: 100%; height: 150px; border: 1px solid var(--border); border-radius: 12px; background: white; touch-action: none; }
+      .template-criterion { display: grid; grid-template-columns: minmax(0,1fr) 135px auto; gap: 0.75rem; align-items: end; margin: 0.75rem 0; padding: 0.85rem; border: 1px solid var(--border); border-radius: 13px; }
+      .template-total { font-weight: 800; color: var(--ksa-green); }
+      .section-heading { margin: 1.5rem 0 0.75rem; }
+      .data-list { display: grid; gap: 0.45rem; }
+      .data-row { display: flex; justify-content: space-between; align-items: baseline; gap: 1rem; padding: 0.68rem 0; border-bottom: 1px solid var(--border); }
+      .data-row:last-child { border-bottom: 0; }
+      .data-value { font-weight: 750; white-space: nowrap; }
+      .status-pill { display: inline-block; border-radius: 999px; padding: 0.25rem 0.7rem; background: var(--ksa-green); color: var(--ksa-white); font-size: 0.85rem; font-weight: 700; }
+      .table-wrap { width: 100%; overflow-x: auto; border-radius: 12px; }
+      tr.top-ranking { background: rgba(0,122,61,0.09); }
+      .directory-search { max-width: 620px; margin-bottom: 1rem; }
+      .info-card h3 { margin-bottom: 0.5rem; }
+      .schedule-time { min-width: 4.5rem; font-weight: 800; color: var(--ksa-green); }
+      .schedule-row { display: flex; gap: 1rem; padding: 0.78rem 0; border-bottom: 1px solid var(--border); }
+      .schedule-row:last-child { border-bottom: 0; }
+      .account-actions { display: flex; flex-wrap: wrap; gap: 0.75rem; align-items: center; }
+      .area-tiles { display: grid; gap: 1.15rem; grid-template-columns: repeat(auto-fit,minmax(min(100%, 320px),1fr)); margin-top: 1.15rem; }
+      .area-tile { overflow: hidden; padding: 0; }
+      .area-tile img { display: block; width: 100%; height: clamp(190px, 24vw, 290px); object-fit: cover; background: var(--ksa-white); border-bottom: 4px solid var(--ksa-green); }
+      .area-tile-content { padding: 1.15rem; }
+      .area-tile-content button { margin-top: 0.75rem; }
+      .organizer-only { margin-top: 1rem; }
+      .public-gallery { display: grid; grid-template-columns: repeat(auto-fill,minmax(min(100%, 240px),1fr)); gap: 1rem; }
+      .gallery-photo { padding: 0; overflow: hidden; }
+      .gallery-photo img { width: 100%; aspect-ratio: 4 / 3; display: block; object-fit: cover; background: #f2f4f2; }
+      .gallery-photo figcaption { padding: 0.75rem 1rem; }
+      .gallery-photo .remove-event-photo { margin: 0 1rem 1rem; }
+      .credential-output { padding: 1rem; border: 2px solid var(--ksa-red); border-radius: 12px; word-break: break-all; font: 700 1.2rem ui-monospace, monospace; }
+      .danger-button { background: var(--ksa-red); color: var(--ksa-white); }
+      .public-hero {
+        position: relative;
+        overflow: hidden;
+        padding: clamp(1.4rem, 4vw, 3rem);
+        border: 0;
+        border-top: 7px solid var(--ksa-red);
+        background: linear-gradient(115deg, var(--ksa-green), #00582d 70%, var(--ksa-black));
+        color: var(--ksa-white);
+      }
+      .public-hero::after { content: ""; position: absolute; width: 290px; height: 290px; right: -90px; top: -130px; border: 1px solid rgba(255,255,255,0.22); border-radius: 50%; box-shadow: 0 0 0 32px rgba(255,255,255,0.045), 0 0 0 64px rgba(255,255,255,0.035); pointer-events: none; }
+      .public-hero > * { position: relative; z-index: 1; }
+      .hero-kicker { margin-bottom: 0.55rem; color: var(--ksa-green); font-size: 0.8rem; font-weight: 800; letter-spacing: 0.14em; text-transform: uppercase; }
+      .public-hero .hero-kicker { margin-bottom: 0.55rem; color: rgba(255,255,255,0.82); font-size: 0.8rem; font-weight: 800; letter-spacing: 0.14em; text-transform: uppercase; }
+      .public-hero > p:not(.hero-kicker) { max-width: 680px; color: rgba(255,255,255,0.9); font-size: 1.05rem; }
+      .public-hero .grid { margin-top: 1.6rem; }
+      .public-hero .kpi { min-height: 96px; border-color: rgba(255,255,255,0.24); background: rgba(255,255,255,0.1); box-shadow: none; }
+      .public-hero .kpi strong, .public-hero .kpi .muted { color: var(--ksa-white); }
+      .public-hero .kpi strong { font-size: 2rem; }
+      .hidden { display: none !important; }
+      @media (max-width: 900px) {
+        header { align-items: flex-start; flex-direction: column; }
+        nav { width: 100%; justify-content: flex-start; }
+      }
+      @media (max-width: 640px) {
+        header { position: static; padding: 0.9rem 1rem; gap: 0.85rem; }
+        nav { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 0.5rem; }
+        nav button { width: 100%; padding: 0.55rem 0.45rem; font-size: 0.88rem; }
+        main { padding: 1rem 0.8rem 2.5rem; }
+        .grid { grid-template-columns: minmax(0,1fr); gap: 0.8rem; }
+        .public-hero .grid { grid-template-columns: repeat(2,minmax(0,1fr)); }
+        .public-hero { padding: 1.35rem; }
+        .public-hero::after { right: -175px; }
+        .card { border-radius: 15px; }
+        .template-criterion { grid-template-columns: minmax(0,1fr); }
+        .account-actions { align-items: stretch; }
+        .account-actions > button { flex: 1 1 auto; }
+        .table-wrap { margin-right: -0.1rem; }
+        th, td { padding: 0.7rem 0.55rem; }
+        .dialog-actions { flex-direction: column-reverse; }
+        .dialog-actions button { width: 100%; }
+        .schedule-row { gap: 0.65rem; }
+      }
+      @media (max-width: 380px) {
+        nav { grid-template-columns: 1fr 1fr; }
+        .public-hero .grid { grid-template-columns: 1fr 1fr; }
+        .public-hero .kpi { min-height: 84px; padding: 0.8rem; }
+        .public-hero .kpi strong { font-size: 1.65rem; }
+      }
+      @media (prefers-reduced-motion: reduce) {
+        *, *::before, *::after { scroll-behavior: auto !important; animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; }
+      }
+    </style>
+  </head>
+  <body>
+    <header>
+      <div>
+        <strong style="display:block; font-size: 1.4rem;">KSA COMPETITIONS</strong>
+        <span>Homa Bay County</span>
+      </div>
+      <nav>
+        <button class="nav-btn" data-page="dashboard" id="dashboard-nav" hidden>Dashboard</button>
+        <button class="nav-btn" data-page="registration" id="registration-nav" hidden>Registration</button>
+        <button class="nav-btn" data-page="assessment" id="assessment-nav" hidden>Assessment</button>
+        <button class="nav-btn active" data-page="public">Public page</button>
+        <button type="button" id="header-sign-in">Sign in</button>
+        <button type="button" class="secondary" id="header-organizer-setup" hidden>Set up organizer</button>
+        <button type="button" class="secondary" id="header-logout" hidden>Sign out</button>
+      </nav>
+    </header>
+
+    <aside id="demo-warning" class="demo-warning" role="status" hidden>
+      Free demo hosting can erase registrations, scores, accounts, and uploaded photos when the service sleeps or restarts. Use sample data only; move to persistent paid hosting before entering real competition information.
+    </aside>
+
+    <main>
+      <section id="dashboard" class="page">
+        <div class="card" id="account-access-card">
+          <h2>Secure competition access</h2>
+          <p id="account-status" class="muted">Checking sign-in status…</p>
+          <div class="account-actions">
+            <button type="button" id="open-login">Sign in</button>
+            <button type="button" class="secondary" id="setup-organizer" hidden>Set up organizer account</button>
+          </div>
+        </div>
+        <div class="area-tiles">
+          <article class="card area-tile">
+            <img id="registration-area-image" alt="Registration area" />
+            <div class="area-tile-content">
+              <h2>Patrol registration</h2>
+              <p class="muted">Register an institution and patrol for the competition.</p>
+              <button type="button" class="go-to-area" data-page="registration">Open registration</button>
+              <label class="organizer-only image-upload hidden">Upload registration photo
+                <input type="file" accept="image/png,image/jpeg,image/webp" data-image-area="registration" />
+              </label>
+            </div>
+          </article>
+          <article class="card area-tile">
+            <img id="assessment-area-image" alt="Assessment area" />
+            <div class="area-tile-content">
+              <h2>Patrol assessment</h2>
+              <p class="muted">Authorized assessors score patrols against prepared rubrics.</p>
+              <button type="button" class="go-to-area" data-page="assessment">Open assessment</button>
+              <label class="organizer-only image-upload hidden">Upload assessment photo
+                <input type="file" accept="image/png,image/jpeg,image/webp" data-image-area="assessment" />
+              </label>
+            </div>
+          </article>
+        </div>
+        <details id="assessor-manager" class="card organizer-only hidden">
+          <summary><strong>Organizer: manage assessor accounts</strong></summary>
+          <p class="muted">Create accounts for authorized assessors. Each receives a unique access code and temporary password, shown once for secure sharing. Assessors can change their password. Rotate a code if it may have been exposed; rotation immediately invalidates the old code and signs that assessor out.</p>
+          <form id="assessor-create-form">
+            <label>Assessor name
+              <input name="name" required maxlength="120" />
+            </label>
+            <label>Assessor username
+              <input name="username" required minlength="3" maxlength="40" />
+            </label>
+            <button type="submit">Create assessor and issue code</button>
+          </form>
+          <p class="form-message" id="assessor-message" role="status" aria-live="polite"></p>
+          <div id="assessor-code-output" class="hidden">
+            <p>Share this code with the assessor through a secure channel. It will not be shown again.</p>
+            <p class="credential-output"></p>
+          </div>
+          <div class="table-wrap">
+            <table>
+              <thead><tr><th>Assessor</th><th>Username</th><th>Status</th><th>Actions</th></tr></thead>
+              <tbody id="assessor-list"></tbody>
+            </table>
+          </div>
+        </details>
+        <section id="organizer-results" class="card organizer-only hidden" style="margin-top:1rem;">
+          <div class="account-actions" style="justify-content:space-between;">
+            <div>
+              <h2>Assessment results and rankings</h2>
+              <p class="muted">Scores are tallied by patrol and competition category as assessors submit them. Totals are provisional until all assessment areas are complete.</p>
+            </div>
+            <button type="button" class="secondary" id="refresh-organizer-results">Refresh scores</button>
+          </div>
+          <p class="form-message" id="organizer-results-message" role="status" aria-live="polite"></p>
+          <div id="organizer-rankings"></div>
+          <h3>Submitted assessment scores</h3>
+          <div class="table-wrap">
+            <table>
+              <thead><tr><th>Submitted</th><th>Patrol / institution</th><th>Area / category</th><th>Assessor</th><th>Score / marks</th><th>Rubric breakdown</th></tr></thead>
+              <tbody id="organizer-assessments"></tbody>
+            </table>
+          </div>
+          <p id="organizer-assessments-empty" class="muted">No assessments have been submitted yet.</p>
+        </section>
+        <div class="grid" id="summary-grid"></div>
+        <div class="grid" style="margin-top:1rem;">
+          <div class="card">
+            <h2>Participation by sub-county</h2>
+            <div id="dashboard-subcounties" class="data-list"></div>
+          </div>
+          <div class="card">
+            <h2>Patrols by section</h2>
+            <div id="dashboard-sections" class="data-list"></div>
+          </div>
+          <div class="card">
+            <h2>Gender distribution</h2>
+            <div id="dashboard-genders" class="data-list"></div>
+          </div>
+          <div class="card">
+            <h2>Competition categories</h2>
+            <div id="dashboard-categories" class="data-list"></div>
+          </div>
+        </div>
+        <div class="grid" style="margin-top:1rem;">
+          <div class="card organizer-only hidden" id="dashboard-status-card">
+            <h2>Registration and payment status</h2>
+            <div id="dashboard-statuses" class="data-list"></div>
+          </div>
+          <div class="card">
+            <h2>Latest competition bulletin</h2>
+            <div id="news-feed"></div>
+          </div>
+        </div>
+      </section>
+
+      <dialog id="auth-dialog" aria-labelledby="auth-title">
+        <h2 id="auth-title">Secure sign in</h2>
+        <div id="auth-login-mode">
+          <form id="password-login-form">
+            <h3>Organizer or assessor username and password</h3>
+            <p class="muted">Organizers use their separate organizer account. Assessors use their own account credentials.</p>
+            <label>Username
+              <input name="username" required autocomplete="username" />
+            </label>
+            <label>Password
+              <input name="password" type="password" required autocomplete="current-password" />
+            </label>
+            <button type="submit">Sign in with password</button>
+          </form>
+          <form id="code-login-form" style="margin-top:1rem;">
+            <h3>Assessor sign in with unique code</h3>
+            <label>Current assessor access code
+              <input name="accessCode" required autocomplete="one-time-code" />
+            </label>
+            <button type="submit">Sign in with access code</button>
+          </form>
+          <button type="button" class="secondary" id="show-organizer-setup" hidden>First-time organizer setup</button>
+        </div>
+        <form id="organizer-setup-form" class="hidden">
+          <h3>Create the first organizer account</h3>
+          <p class="muted">Only available before an organizer account exists. Enter the one-time setup key supplied by the server administrator, then choose a strong password.</p>
+          <label>One-time organizer setup key
+            <input name="setupKey" type="password" required autocomplete="off" />
+          </label>
+          <label>Organizer name
+            <input name="name" required maxlength="120" />
+          </label>
+          <label>Username
+            <input name="username" required minlength="3" maxlength="40" autocomplete="username" />
+          </label>
+          <label>Password (at least 12 characters)
+            <input name="password" type="password" required minlength="12" autocomplete="new-password" />
+          </label>
+          <button type="submit">Create organizer account</button>
+          <button type="button" class="secondary" id="cancel-organizer-setup">Back to sign in</button>
+        </form>
+        <p class="form-message" id="auth-message" role="status" aria-live="polite"></p>
+        <button type="button" class="secondary" id="close-auth">Close</button>
+      </dialog>
+
+      <dialog id="credential-dialog" aria-labelledby="credential-title">
+        <h2 id="credential-title">Assessor sign-in details</h2>
+        <p>Share the displayed credentials through a secure channel. At account creation, a temporary password is also shown; code-rotation dialogs show only the replacement code.</p>
+        <p id="credential-dialog-code" class="credential-output"></p>
+        <div id="credential-dialog-password-wrap">
+          <p>Temporary password</p>
+          <p id="credential-dialog-password" class="credential-output"></p>
+        </div>
+        <button type="button" id="close-credential">Done</button>
+      </dialog>
+
+      <section id="registration" class="page">
+        <div class="card">
+          <p class="hero-kicker">Competition entry</p>
+          <h1>Register a patrol</h1>
+          <p class="muted">Enter the institution, leadership, and patrol details. The patrol code is generated from its section and competition category.</p>
+          <form id="registration-form">
+            <label>Competition Level
+              <select name="competitionLevel" required>
+                <option value="Sub-County Inter-Patrol Competition">Sub-County Inter-Patrol Competition</option>
+                <option value="County Inter-Patrol Competition">County Inter-Patrol Competition</option>
+              </select>
+            </label>
+            <label>Sub-County
+              <select name="subCounty" required>
+                <option value="Rachuonyo South">Rachuonyo South</option>
+                <option value="Kasipul">Kasipul</option>
+                <option value="Ndhiwa">Ndhiwa</option>
+                <option value="Mbita">Mbita</option>
+                <option value="Homa Bay Town">Homa Bay Town</option>
+                <option value="Rangwe">Rangwe</option>
+                <option value="Suba North">Suba North</option>
+                <option value="Suba South">Suba South</option>
+                <option value="Karachuonyo">Karachuonyo</option>
+                <option value="Kabondo Kasipul">Kabondo Kasipul</option>
+                <option value="Rachuonyo East">Rachuonyo East</option>
+                <option value="Rachuonyo North">Rachuonyo North</option>
+              </select>
+            </label>
+            <label>School / Institution Name
+              <input name="schoolName" required placeholder="e.g. Kanyamwa Secondary School" />
+            </label>
+            <label>KSA Unit No.
+              <input name="ksaUnitNo" placeholder="Optional" />
+            </label>
+            <label>Scout Leader
+              <input name="scoutLeader" required placeholder="Full name" />
+            </label>
+            <label>Scout Leader KSA Membership No.
+              <input name="scoutLeaderMembershipNo" required maxlength="80" autocomplete="off" placeholder="Required" />
+            </label>
+            <label>Assistant Scout Leader
+              <input name="assistantScoutLeader" placeholder="Optional" />
+            </label>
+            <label>Assistant Scout Leader KSA Membership No.
+              <input name="assistantScoutLeaderMembershipNo" maxlength="80" autocomplete="off" placeholder="Required if assistant is listed" />
+            </label>
+            <label>Patrol Name
+              <input name="patrolName" required placeholder="e.g. Lion Patrol" />
+            </label>
+            <label>Scout Section
+              <select name="section" required>
+                <option value="Sungura">Sungura</option>
+                <option value="Chipukizi">Chipukizi</option>
+                <option value="Mwamba">Mwamba</option>
+                <option value="Jasiri">Jasiri</option>
+              </select>
+            </label>
+            <label>Competition Category
+              <select name="category" required>
+                <option value="Camp craft">Camp craft</option>
+                <option value="Drills">Drills</option>
+                <option value="Band">Band</option>
+              </select>
+            </label>
+            <label>Gender / Sex
+              <select name="gender" required>
+                <option value="Male">Male</option>
+                <option value="Female">Female</option>
+                <option value="Mixed">Mixed</option>
+              </select>
+            </label>
+            <label>Special Needs
+              <select name="specialNeeds">
+                <option value="false">No</option>
+                <option value="true">Yes</option>
+              </select>
+            </label>
+            <label>Generated Patrol Code
+              <input name="patrolCodePreview" readonly aria-live="polite" placeholder="Generated from patrol details" />
+            </label>
+            <label>Emergency Contact
+              <input name="emergencyContact" placeholder="Optional: name and phone number" />
+            </label>
+            <label>Number of Patrol Members
+              <input name="membersCount" type="number" min="1" max="100" step="1" value="12" required />
+            </label>
+            <div style="grid-column: 1 / -1; display:flex; gap:0.75rem; align-items:end;">
+              <button type="submit">Save patrol</button>
+            </div>
+          </form>
+          <p class="form-message" id="registration-message" role="status" aria-live="polite"></p>
+        </div>
+
+        <div class="card organizer-only hidden" style="margin-top: 1rem;">
+          <h2>Registered patrols</h2>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr><th>Patrol</th><th>Code</th><th>School</th><th>Section</th><th>Category</th><th>Payment</th><th>Registration</th><th>Action</th></tr>
+              </thead>
+              <tbody id="registrations-table"></tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <dialog id="payment-dialog" aria-labelledby="payment-title">
+        <form id="payment-approval-form">
+          <h2 id="payment-title">Approve registration fee</h2>
+          <p class="muted">Enter the verified receipt number to approve the registration. The patrol code is generated when the patrol is registered.</p>
+          <label>Verified payment receipt number
+            <input name="receiptNumber" required maxlength="80" autocomplete="off" placeholder="M-Pesa receipt number" />
+          </label>
+          <p class="form-message" id="payment-message" role="status" aria-live="polite"></p>
+          <div class="dialog-actions">
+            <button type="button" class="secondary" id="payment-cancel">Cancel</button>
+            <button type="submit">Approve payment</button>
+          </div>
+        </form>
+      </dialog>
+
+      <section id="assessment" class="page">
+        <div class="card">
+          <p class="hero-kicker">Assessor workspace</p>
+          <h1>Patrol assessment</h1>
+          <p class="muted">Select an eligible patrol code, score each rubric item, then sign and submit the assessment.</p>
+          <form id="assessment-form">
+            <div class="assessment-part">
+              <h3>Part A — Assessment start & patrol information</h3>
+              <div class="grid">
+                <label>Assessor’s full name
+                  <input name="assessorName" readonly required maxlength="120" placeholder="Sign in as an assessor" />
+                </label>
+                <label>Assessment starting time
+                  <input id="assessment-starting-at" type="datetime-local" readonly placeholder="Recorded after assessor details" />
+                </label>
+                <label>Patrol code
+                  <select name="patrolCode" id="patrol-select" required></select>
+                </label>
+                <label>Patrol name
+                  <input id="assessment-patrol-name" readonly />
+                </label>
+                <label>Scout section
+                  <select name="section" id="assessment-section" required>
+                    <option value="Sungura">Sungura</option>
+                    <option value="Chipukizi">Chipukizi</option>
+                    <option value="Mwamba">Mwamba</option>
+                    <option value="Jasiri">Jasiri</option>
+                  </select>
+                </label>
+                <label>Gender / sex
+                  <select name="gender" id="assessment-gender" required>
+                    <option value="Male">Male</option>
+                    <option value="Female">Female</option>
+                    <option value="Mixed">Mixed</option>
+                  </select>
+                </label>
+                <label>Competition category
+                  <select name="category" id="assessment-category" required>
+                    <option value="Camp craft">Camp craft</option>
+                    <option value="Drills">Drills</option>
+                    <option value="Band">Band</option>
+                  </select>
+                </label>
+                <label>Assessment area
+                  <select name="area" id="assessment-area" required>
+                    <option value="Base 1">Base 1</option>
+                    <option value="Base 2">Base 2</option>
+                    <option value="Project 1">Project 1</option>
+                    <option value="Project 2">Project 2</option>
+                    <option value="Arrival Inspection">Arrival Inspection</option>
+                    <option value="Morning Inspection">Morning Inspection</option>
+                    <option value="Night Inspection">Night Inspection</option>
+                  </select>
+                </label>
+              </div>
+            </div>
+
+            <div class="assessment-part">
+              <h3>Part B — Questions & scoring rubric</h3>
+              <h4 id="active-rubric-title">Select a patrol and area to load the scoring rubric.</h4>
+              <p class="muted" id="active-rubric-description"></p>
+              <div id="active-rubric-questions"></div>
+              <p class="template-total" id="assessment-total">Total: 0</p>
+              <p class="form-message" id="rubric-message" role="status" aria-live="polite"></p>
+              <label>Assessor comments (optional)
+                <textarea name="notes" placeholder="Optional comments"></textarea>
+              </label>
+            </div>
+
+            <div class="assessment-part">
+              <h3>Part C — Assessment verification</h3>
+              <div class="grid">
+                <label>Assessment ending time
+                  <input id="assessment-ending-at" type="datetime-local" readonly placeholder="Recorded when submitted" />
+                </label>
+              </div>
+              <div class="signature-grid">
+                <div>
+                  <label for="assessor-signature">Assessor’s signature</label>
+                  <canvas id="assessor-signature" class="signature-pad" aria-label="Draw the assessor signature"></canvas>
+                  <button type="button" class="secondary clear-signature" data-canvas="assessor-signature">Clear signature</button>
+                </div>
+              </div>
+            </div>
+            <button type="submit" id="save-assessment">Submit assessment</button>
+          </form>
+          <p class="form-message" id="assessment-message" role="status" aria-live="polite"></p>
+        </div>
+
+        <details id="assessor-account-tools" class="card hidden" style="margin-top:1rem;">
+          <summary><strong>Assessor account</strong></summary>
+          <p class="muted">Update your password for future sign-ins. Your access code remains available until an organizer rotates it.</p>
+          <button type="button" class="secondary" id="change-password">Set or change password</button>
+          <form id="change-password-form" class="hidden">
+            <label>Current password (not required after signing in with your access code)
+              <input name="currentPassword" type="password" autocomplete="current-password" />
+            </label>
+            <label>New password (at least 12 characters)
+              <input name="newPassword" type="password" minlength="12" required autocomplete="new-password" />
+            </label>
+            <button type="submit">Save password</button>
+            <p class="form-message" id="password-message" role="status" aria-live="polite"></p>
+          </form>
+        </details>
+
+        <details class="card organizer-only hidden" style="margin-top:1rem;" id="rubric-manager">
+          <summary><strong>Organizer: prepare or update scoring questions</strong></summary>
+          <p class="muted">Saving a rubric creates a new version for future assessments. Previously submitted scores keep their original questions and marks.</p>
+          <form id="template-form">
+            <label>Rubric title
+              <input name="title" required maxlength="120" placeholder="e.g. Trestle Building" />
+            </label>
+            <label>Assessment area
+              <select name="area" required>
+                <option value="Base 1">Base 1</option>
+                <option value="Base 2">Base 2</option>
+                <option value="Project 1">Project 1</option>
+                <option value="Project 2" selected>Project 2</option>
+                <option value="Arrival Inspection">Arrival Inspection</option>
+                <option value="Morning Inspection">Morning Inspection</option>
+                <option value="Night Inspection">Night Inspection</option>
+              </select>
+            </label>
+            <label>Competition category
+              <select name="category" required>
+                <option value="All categories">All categories</option>
+                <option value="Camp craft">Camp craft</option>
+                <option value="Drills">Drills</option>
+                <option value="Band">Band</option>
+              </select>
+            </label>
+            <label style="grid-column:1 / -1;">Assessment instructions (optional)
+              <textarea name="description" maxlength="1000" placeholder="Explain the task and any judging guidance"></textarea>
+            </label>
+            <div style="grid-column:1 / -1;">
+              <h4>Scoring questions and maximum marks</h4>
+              <div id="template-criteria"></div>
+              <p class="template-total" id="template-total">Total marks: 0</p>
+              <button type="button" class="secondary" id="add-criterion">+ Add question</button>
+            </div>
+            <button type="submit">Save new rubric version</button>
+          </form>
+          <p class="form-message" id="template-message" role="status" aria-live="polite"></p>
+        </details>
+
+      </section>
+
+      <section id="public" class="page active">
+        <div class="card public-hero">
+          <p class="hero-kicker">Kenya Scouts Association · Homa Bay County</p>
+          <h1>Homa Bay Scouts Competition</h1>
+          <p>Follow participation and competition updates from the Homa Bay County inter-patrol event.</p>
+          <div class="grid">
+            <div class="card kpi"><strong id="public-registrations">0</strong><span class="muted">scouts registered</span></div>
+            <div class="card kpi"><strong id="public-schools">0</strong><span class="muted">institutions</span></div>
+            <div class="card kpi"><strong id="public-patrols">0</strong><span class="muted">patrols registered</span></div>
+          </div>
+        </div>
+        <div class="grid" style="margin-top:1rem;">
+          <div class="card">
+            <h2>Event schedule</h2>
+            <div id="public-schedule" class="data-list"></div>
+          </div>
+          <div class="card">
+            <h2>Participation by sub-county</h2>
+            <div id="public-subcounties" class="data-list"></div>
+          </div>
+          <div class="card">
+            <h2>Scout sections and patrol gender</h2>
+            <div id="public-sections" class="data-list"></div>
+            <div id="public-genders" class="data-list"></div>
+          </div>
+        </div>
+        <div class="card" style="margin-top:1rem;">
+          <h2>Participating patrol directory</h2>
+          <label class="directory-search">Search school, patrol, category, or sub-county
+            <input id="public-directory-search" type="search" placeholder="Start typing to filter patrols" />
+          </label>
+          <div class="table-wrap">
+            <table>
+              <thead><tr><th>Institution</th><th>Sub-county</th><th>Patrol</th><th>Section</th><th>Gender</th><th>Category</th></tr></thead>
+              <tbody id="public-directory"></tbody>
+            </table>
+          </div>
+          <p class="muted" id="public-directory-empty" hidden>No patrols match this search.</p>
+        </div>
+        <section class="card" style="margin-top:1rem;" aria-labelledby="public-leaderboard-title">
+          <h2 id="public-leaderboard-title">Live category leaderboard</h2>
+          <p class="muted">Top three patrols per category, ranked by submitted marks. Scores update automatically and remain provisional while judging continues.</p>
+          <p id="public-leaderboard-status" class="muted" role="status" aria-live="polite"></p>
+          <div id="public-leaderboard" class="grid"></div>
+        </section>
+        <section class="card" style="margin-top:1rem;" aria-labelledby="event-gallery-title">
+          <h2 id="event-gallery-title">Event pictorials</h2>
+          <p class="muted">Photos from the Homa Bay Scouts Competition.</p>
+          <form id="event-photo-form" class="organizer-only hidden">
+            <label>Photo caption
+              <input name="caption" maxlength="160" placeholder="Describe this competition moment" />
+            </label>
+            <label>Add event photo (PNG, JPEG, or WebP; under 1 MB)
+              <input name="image" type="file" accept="image/png,image/jpeg,image/webp" required />
+            </label>
+            <button type="submit">Upload event photo</button>
+            <p id="event-photo-message" class="form-message" role="status" aria-live="polite"></p>
+          </form>
+          <div id="event-gallery" class="public-gallery"></div>
+          <p id="event-gallery-empty" class="muted">Event photos have not been added yet.</p>
+        </section>
+        <div class="grid" style="margin-top:1rem;">
+          <div class="card info-card">
+            <h2>Downloads and event resources</h2>
+            <p>Competition forms, rules, the KSA constitution, and other event documents will be listed here when organizers upload the official files.</p>
+            <p class="status-pill">Official documents not uploaded yet</p>
+            <h2 class="section-heading">Results and highlights</h2>
+            <p>Category leaders, top-three awards, best sub-county results, and historical winners will appear here when official results are published.</p>
+            <p class="muted">No approved results or past-winner archive is available yet.</p>
+          </div>
+          <div class="card info-card">
+            <h2>News and announcements</h2>
+            <div id="public-news-feed"></div>
+          </div>
+          <div class="card info-card">
+            <h2>Livestreams, partners, and social</h2>
+            <p>Official livestream links, sponsor logos, and social-media links will appear here once supplied by event organizers.</p>
+            <p class="muted">No official links or partner listings have been added yet.</p>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <script>
+      const state = { registrations: [], publicPatrols: [], publicLeaderboard: [], eventPhotos: [], assessmentPatrols: [], organizerResults: { assessments: [], rankings: [] }, summary: {}, activeRubric: null, scored: new Map(), currentUser: null, needsOrganizerSetup: false, demoMode: false };
+      const signaturePads = new Map();
+      const subCounties = [
+        'Rachuonyo South', 'Kasipul', 'Ndhiwa', 'Mbita', 'Homa Bay Town', 'Rangwe',
+        'Suba North', 'Suba South', 'Karachuonyo', 'Kabondo Kasipul', 'Rachuonyo East', 'Rachuonyo North',
+      ];
+      const scoutSections = ['Sungura', 'Chipukizi', 'Mwamba', 'Jasiri'];
+      const competitionCategories = ['Camp craft', 'Drills', 'Band'];
+      const eventSchedule = [
+        { time: 'Arrival', title: 'Arrival inspection' },
+        { time: '06:30', title: 'Morning inspection' },
+        { time: '10:00', title: 'Drill display' },
+        { time: '17:30', title: 'Final award ceremony' },
+        { time: 'Night', title: 'Night inspection' },
+        { time: '20:00', title: 'Campfire night' },
+      ];
+
+      const navButtons = document.querySelectorAll('.nav-btn');
+      navButtons.forEach((button) => {
+        button.addEventListener('click', () => {
+          navigateToPage(button.dataset.page);
+        });
+      });
+      document.querySelectorAll('.go-to-area').forEach((button) => {
+        button.addEventListener('click', () => navigateToPage(button.dataset.page));
+      });
+
+      function setStatus(message, isError = false, targetId = 'registration-message') {
+        const status = document.getElementById(targetId);
+        if (!status) return;
+        status.textContent = message;
+        status.style.color = isError ? 'var(--ksa-red)' : 'var(--ksa-green)';
+      }
+
+      async function apiFetch(url, options = {}) {
+        const response = await fetch(url, {
+          headers: { 'Content-Type': 'application/json' },
+          ...options,
+        });
+        const data = await response.json().catch(() => ({}));
+        if (!response.ok) {
+          throw new Error(data.message || 'Request failed');
+        }
+        return data;
+      }
+
+      const authDialog = document.getElementById('auth-dialog');
+      function navigateToPage(pageId) {
+        if (['dashboard', 'registration'].includes(pageId) && state.currentUser?.role !== 'organizer') {
+          authDialog.showModal();
+          setStatus('Sign in with an organizer account to access this page.', true, 'auth-message');
+          return;
+        }
+        if (pageId === 'assessment' && !['assessor', 'organizer'].includes(state.currentUser?.role)) {
+          authDialog.showModal();
+          setStatus('Sign in with an authorized account to assess patrols.', true, 'auth-message');
+          return;
+        }
+        navButtons.forEach((button) => button.classList.toggle('active', button.dataset.page === pageId));
+        document.querySelectorAll('.page').forEach((page) => page.classList.toggle('active', page.id === pageId));
+        if (pageId === 'assessment' && state.currentUser?.role === 'assessor') {
+          requestAnimationFrame(() => signaturePads.forEach((pad) => initializeSignaturePad(pad.canvas)));
+        }
+        if (pageId === 'dashboard' && state.currentUser?.role === 'organizer') loadOrganizerResults();
+      }
+
+      function renderAuthStatus() {
+        const user = state.currentUser;
+        document.getElementById('account-status').textContent = user
+          ? `Signed in as ${user.name} (${user.role}).`
+          : 'Organizer sign-in is required for registration and management. Assessors sign in to assess patrols.';
+        document.getElementById('open-login').hidden = Boolean(user);
+        document.getElementById('setup-organizer').hidden = Boolean(user) || !state.needsOrganizerSetup;
+        document.getElementById('header-sign-in').hidden = Boolean(user);
+        document.getElementById('header-organizer-setup').hidden = Boolean(user) || !state.needsOrganizerSetup;
+        document.getElementById('header-logout').hidden = !user;
+        document.getElementById('show-organizer-setup').hidden = !state.needsOrganizerSetup;
+        document.getElementById('assessor-account-tools').classList.toggle('hidden', user?.role !== 'assessor');
+        document.getElementById('dashboard-nav').hidden = user?.role !== 'organizer';
+        document.getElementById('registration-nav').hidden = user?.role !== 'organizer';
+        document.querySelector('#dashboard .go-to-area[data-page="registration"]').hidden = user?.role !== 'organizer';
+        document.querySelector('#dashboard .go-to-area[data-page="assessment"]').hidden =
+          !['assessor', 'organizer'].includes(user?.role);
+        document.getElementById('assessor-manager').classList.toggle('hidden', user?.role !== 'organizer');
+        document.getElementById('organizer-results').classList.toggle('hidden', user?.role !== 'organizer');
+        document.getElementById('dashboard-status-card').classList.toggle('hidden', user?.role !== 'organizer');
+        document.getElementById('event-photo-form').classList.toggle('hidden', user?.role !== 'organizer');
+        document.querySelector('#registration .organizer-only').classList.toggle('hidden', user?.role !== 'organizer');
+        document.getElementById('rubric-manager').classList.toggle('hidden', user?.role !== 'organizer');
+        document.querySelectorAll('.image-upload').forEach((control) => {
+          control.classList.toggle('hidden', user?.role !== 'organizer');
+        });
+        document.getElementById('assessment-nav').hidden = !['assessor', 'organizer'].includes(user?.role);
+        document.getElementById('assessment-form').hidden = user?.role !== 'assessor';
+        document.querySelector('#assessment-form [name="assessorName"]').value =
+          user?.role === 'assessor' ? user.name : '';
+        if (user?.role === 'organizer') loadAssessors();
+        document.querySelectorAll('.nav-btn[data-page="dashboard"], .nav-btn[data-page="registration"]').forEach((button) => {
+          button.hidden = user?.role !== 'organizer';
+        });
+        if (user?.role !== 'assessor') {
+          state.assessmentPatrols = [];
+          document.getElementById('patrol-select').innerHTML = '<option value="" disabled selected>Assessor sign-in required</option>';
+        }
+      }
+
+      async function refreshAuthStatus() {
+        const status = await apiFetch('/api/auth/status');
+        state.currentUser = status.user;
+        state.needsOrganizerSetup = status.needsOrganizerSetup;
+        renderAuthStatus();
+      }
+
+      function promptAssessorPasswordSetup(user) {
+        if (user?.role !== 'assessor' || (user.hasPassword && !user.canChangePasswordWithoutCurrent)) return;
+        document.getElementById('assessor-account-tools').open = true;
+        document.getElementById('change-password-form').classList.remove('hidden');
+        document.getElementById('password-message').textContent = user.hasPassword
+          ? 'You signed in with your access code and can set a new password without the old one.'
+          : 'Set a password for future sign-ins; your unique code will also remain available until rotated.';
+      }
+
+      async function loadAssessors() {
+        try {
+          const assessors = await apiFetch('/api/assessors');
+          document.getElementById('assessor-list').innerHTML = assessors.map((assessor) => `
+            <tr>
+              <td>${escapeHtml(assessor.name)}</td>
+              <td>${escapeHtml(assessor.username)}</td>
+              <td>${assessor.active ? 'Active' : 'Disabled'}</td>
+              <td>
+                ${assessor.active ? `
+                  <button type="button" class="secondary rotate-assessor-code" data-id="${escapeHtml(assessor.id)}">Rotate access code</button>
+                  <button type="button" class="secondary disable-assessor" data-id="${escapeHtml(assessor.id)}">Disable account</button>
+                ` : `<button type="button" class="secondary enable-assessor" data-id="${escapeHtml(assessor.id)}">Enable account</button>`}
+              </td>
+            </tr>
+          `).join('');
+        } catch (error) {
+          setStatus(error.message, true, 'assessor-message');
+        }
+      }
+
+      function showAccessCode(code, temporaryPassword = '') {
+        document.getElementById('credential-dialog-code').textContent = code;
+        document.getElementById('credential-dialog-password-wrap').classList.toggle('hidden', !temporaryPassword);
+        document.getElementById('credential-dialog-password').textContent = temporaryPassword;
+        document.getElementById('credential-dialog').showModal();
+      }
+
+      function areaPlaceholder(area) {
+        const title = area === 'registration' ? 'PATROL REGISTRATION' : 'PATROL ASSESSMENT';
+        const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 420"><rect width="900" height="420" fill="#ffffff"/><path d="M0 0h900v38H0z" fill="#007a3d"/><path d="M0 382h900v38H0z" fill="#ce1126"/><circle cx="450" cy="190" r="105" fill="#007a3d"/><path d="M450 113l19 53 56 2-44 34 16 54-47-31-47 31 16-54-44-34 56-2z" fill="#ffffff"/><text x="450" y="330" text-anchor="middle" font-family="Arial,sans-serif" font-size="30" font-weight="700" fill="#080808">${title}</text></svg>`;
+        return `data:image/svg+xml,${encodeURIComponent(svg)}`;
+      }
+
+      async function loadAreaImages() {
+        const images = await apiFetch('/api/area-images');
+        for (const area of ['registration', 'assessment']) {
+          document.getElementById(`${area}-area-image`).src = images[area] || areaPlaceholder(area);
+        }
+      }
+
+      let codePreviewRequest = 0;
+      async function updatePatrolCodePreview() {
+        const form = document.getElementById('registration-form');
+        const preview = form.elements.namedItem('patrolCodePreview');
+        const requestId = ++codePreviewRequest;
+        const query = new URLSearchParams({
+          section: form.elements.namedItem('section').value,
+          category: form.elements.namedItem('category').value,
+          gender: form.elements.namedItem('gender').value,
+          specialNeeds: form.elements.namedItem('specialNeeds').value,
+        });
+        preview.value = 'Generating...';
+        try {
+          const result = await apiFetch(`/api/patrol-code-preview?${query}`);
+          if (requestId === codePreviewRequest) preview.value = result.patrolCode;
+        } catch (error) {
+          if (requestId === codePreviewRequest) {
+            preview.value = '';
+            setStatus(error.message, true);
+          }
+        }
+      }
+
+      function escapeHtml(value) {
+        return String(value ?? '').replace(/[&<>"']/g, (character) => ({
+          '&': '&amp;',
+          '<': '&lt;',
+          '>': '&gt;',
+          '"': '&quot;',
+          "'": '&#39;',
+        })[character]);
+      }
+
+      function localDateTimeValue(date = new Date()) {
+        const local = new Date(date.getTime() - date.getTimezoneOffset() * 60_000);
+        return local.toISOString().slice(0, 16);
+      }
+
+      function setAssessmentPatrolDetails() {
+        const patrol = state.assessmentPatrols.find((item) => item.patrolCode === document.getElementById('patrol-select').value);
+        document.getElementById('assessment-patrol-name').value = patrol?.patrolName ?? '';
+        document.getElementById('assessment-section').value = patrol?.section ?? '';
+        document.getElementById('assessment-category').value = patrol?.category ?? '';
+        document.getElementById('assessment-gender').value = patrol?.gender ?? '';
+      }
+
+      function recordAssessmentStart() {
+        const assessorName = document.querySelector('#assessment-form [name="assessorName"]').value.trim();
+        const selectedPatrol = state.assessmentPatrols.find((item) => item.patrolCode === document.getElementById('patrol-select').value);
+        const startingAt = document.getElementById('assessment-starting-at');
+        if (assessorName && selectedPatrol && !selectedPatrol.alreadyAssessed && !startingAt.value) {
+          startingAt.value = localDateTimeValue();
+        }
+      }
+
+      async function loadActiveRubric() {
+        const container = document.getElementById('active-rubric-questions');
+        container.replaceChildren();
+        state.activeRubric = null;
+        state.scored.clear();
+        updateAssessmentTotal();
+        const area = document.getElementById('assessment-area').value;
+        const patrol = state.assessmentPatrols.find((item) => item.patrolCode === document.getElementById('patrol-select').value);
+        if (!patrol) {
+          document.getElementById('active-rubric-title').textContent = state.assessmentPatrols.some((item) => !item.alreadyAssessed)
+            ? 'Select a paid patrol code to load its rubric.'
+            : 'No eligible patrol codes remain for this area.';
+          document.getElementById('active-rubric-description').textContent = '';
+          return;
+        }
+        if (patrol.alreadyAssessed) {
+          document.getElementById('active-rubric-title').textContent = 'This patrol has already been assessed in this area.';
+          document.getElementById('active-rubric-description').textContent = 'Choose another patrol code or select a different assessment area.';
+          return;
+        }
+        try {
+          const query = new URLSearchParams({ area, category: patrol.category });
+          const templates = await apiFetch(`/api/assessment-templates?${query}`);
+          const rubric = templates[0];
+          if (!rubric) {
+            document.getElementById('active-rubric-title').textContent = 'No active rubric for this category and area.';
+            document.getElementById('active-rubric-description').textContent = 'Ask the organizer to prepare and save the questions before assessing this patrol.';
+            return;
+          }
+          state.activeRubric = rubric;
+          document.getElementById('active-rubric-title').textContent = `${rubric.title} — version ${rubric.version} (${rubric.totalMarks} marks)`;
+          document.getElementById('active-rubric-description').textContent = rubric.description || '';
+          container.innerHTML = rubric.criteria.map((criterion, index) => `
+            <div class="rubric-criterion" data-criterion="${escapeHtml(criterion.id)}">
+              <strong>${index + 1}. ${escapeHtml(criterion.question)}</strong>
+              <p class="muted">Select the score awarded (maximum ${criterion.maxMarks}).</p>
+              <label>Score awarded
+                <select class="criterion-score" data-criterion-id="${escapeHtml(criterion.id)}" required aria-label="Score for ${escapeHtml(criterion.question)}">
+                  <option value="">Choose a score</option>
+                  ${Array.from({ length: criterion.maxMarks + 1 }, (_, score) => `<option value="${score}">${score}</option>`).join('')}
+                </select>
+              </label>
+            </div>
+          `).join('');
+          updateAssessmentTotal();
+        } catch (error) {
+          document.getElementById('active-rubric-title').textContent = 'Unable to load scoring questions.';
+          document.getElementById('active-rubric-description').textContent = error.message;
+        }
+      }
+
+      function updateAssessmentTotal() {
+        const score = [...state.scored.values()].reduce((total, value) => total + value, 0);
+        const maximum = state.activeRubric?.totalMarks ?? 0;
+        document.getElementById('assessment-total').textContent = `Total: ${score} / ${maximum}`;
+      }
+
+      function addTemplateCriterion(question = '', maxMarks = '') {
+        const row = document.createElement('div');
+        row.className = 'template-criterion';
+        row.innerHTML = `
+          <label>Question / criterion
+            <input data-field="question" maxlength="200" required value="${escapeHtml(question)}" placeholder="e.g. Structural stability" />
+          </label>
+          <label>Maximum marks
+            <input data-field="maxMarks" type="number" min="1" max="100" step="1" required value="${escapeHtml(maxMarks)}" />
+          </label>
+          <button type="button" class="secondary remove-criterion">Remove</button>
+        `;
+        document.getElementById('template-criteria').appendChild(row);
+        row.querySelector('[data-field="maxMarks"]').addEventListener('input', updateTemplateTotal);
+        updateTemplateTotal();
+      }
+
+      function updateTemplateTotal() {
+        const total = [...document.querySelectorAll('.template-criterion [data-field="maxMarks"]')]
+          .reduce((sum, input) => sum + (Number(input.value) || 0), 0);
+        document.getElementById('template-total').textContent = `Total marks: ${total}`;
+      }
+
+      function initializeSignaturePad(canvas) {
+        let pad = signaturePads.get(canvas.id);
+        if (!pad) {
+          const context = canvas.getContext('2d');
+          if (!context) throw new Error('This browser cannot create a signature pad.');
+          pad = { canvas, context, signed: false, drawing: false };
+          signaturePads.set(canvas.id, pad);
+          canvas.addEventListener('pointerdown', (event) => {
+            event.preventDefault();
+            canvas.setPointerCapture(event.pointerId);
+            const bounds = canvas.getBoundingClientRect();
+            pad.drawing = true;
+            pad.context.beginPath();
+            pad.context.moveTo(event.clientX - bounds.left, event.clientY - bounds.top);
+          });
+          canvas.addEventListener('pointermove', (event) => {
+            if (!pad.drawing) return;
+            const bounds = canvas.getBoundingClientRect();
+            pad.context.lineTo(event.clientX - bounds.left, event.clientY - bounds.top);
+            pad.context.stroke();
+            pad.signed = true;
+          });
+          const finish = () => { pad.drawing = false; };
+          canvas.addEventListener('pointerup', finish);
+          canvas.addEventListener('pointercancel', finish);
+          canvas.addEventListener('lostpointercapture', finish);
+        }
+        if (!canvas.clientWidth || !canvas.clientHeight || pad.signed) return;
+        const ratio = window.devicePixelRatio || 1;
+        const width = canvas.clientWidth;
+        const height = canvas.clientHeight;
+        if (canvas.width === Math.round(width * ratio) && canvas.height === Math.round(height * ratio)) return;
+        canvas.width = Math.round(width * ratio);
+        canvas.height = Math.round(height * ratio);
+        pad.context.setTransform(ratio, 0, 0, ratio, 0, 0);
+        pad.context.lineWidth = 2.2;
+        pad.context.lineCap = 'round';
+        pad.context.lineJoin = 'round';
+        pad.context.strokeStyle = 'var(--ksa-black)';
+      }
+
+      function clearSignature(id) {
+        const pad = signaturePads.get(id);
+        if (!pad) return;
+        pad.context.clearRect(0, 0, pad.canvas.clientWidth, pad.canvas.clientHeight);
+        pad.signed = false;
+      }
+
+      function initializeSignaturePads() {
+        document.querySelectorAll('.signature-pad').forEach(initializeSignaturePad);
+      }
+
+      function countBy(items, key) {
+        return items.reduce((counts, item) => {
+          const value = item[key] || 'Not specified';
+          counts[value] = (counts[value] || 0) + 1;
+          return counts;
+        }, {});
+      }
+
+      function renderCountList(containerId, labels, counts, noun = 'patrols') {
+        const container = document.getElementById(containerId);
+        container.innerHTML = labels.map((label) => `
+          <div class="data-row">
+            <span>${escapeHtml(label)}</span>
+            <span class="data-value">${counts[label] || 0} ${noun}</span>
+          </div>
+        `).join('');
+      }
+
+      function renderDashboard() {
+        const registrations = state.currentUser?.role === 'organizer' ? state.registrations : state.publicPatrols;
+        const countsBySubCounty = countBy(registrations, 'subCounty');
+        const countsBySection = countBy(registrations, 'section');
+        const countsByGender = countBy(registrations, 'gender');
+        const countsByCategory = countBy(registrations, 'category');
+        renderCountList('dashboard-subcounties', subCounties, countsBySubCounty);
+        renderCountList('dashboard-sections', scoutSections, countsBySection);
+        renderCountList('dashboard-genders', ['Male', 'Female', 'Mixed'], countsByGender);
+        renderCountList('dashboard-categories', competitionCategories, countsByCategory);
+
+        const statuses = [
+          ['Pending registration', registrations.filter((item) => item.registrationStatus === 'Pending').length],
+          ['Approved', registrations.filter((item) => item.registrationStatus === 'Approved').length],
+          ['Checked in', registrations.filter((item) => item.registrationStatus === 'Checked-In').length],
+          ['Payment pending', registrations.filter((item) => item.paymentStatus === 'Pending').length],
+          ['Paid', registrations.filter((item) => item.paymentStatus === 'Paid').length],
+        ];
+        document.getElementById('dashboard-statuses').innerHTML = statuses.map(([label, count]) => `
+          <div class="data-row"><span>${escapeHtml(label)}</span><span class="data-value">${count}</span></div>
+        `).join('');
+
+        const grid = document.getElementById('summary-grid');
+        const stats = [
+          { label: 'Registrations', value: state.summary.registrations ?? 0 },
+          { label: 'Registered scouts', value: state.summary.scouts ?? 0 },
+          { label: 'Participating schools', value: new Set(state.publicPatrols.map((item) => item.schoolName)).size },
+          { label: 'Approved', value: state.summary.approved ?? 0 },
+          { label: 'Paid', value: state.summary.paid ?? 0 },
+          { label: 'Assessments', value: state.summary.assessments ?? 0 },
+        ];
+        grid.innerHTML = stats.map((item) => `
+          <div class="card kpi">
+            <strong>${item.value}</strong>
+            <span class="muted">${item.label}</span>
+          </div>
+        `).join('');
+
+        const newsWrap = document.getElementById('news-feed');
+        const news = (state.summary.news ?? []).filter((item) => item.isPublished !== false);
+        newsWrap.innerHTML = news.length
+          ? news.map((item) => `
+            <div class="news-item" style="margin-bottom:1rem;">
+              <strong>${escapeHtml(item.title)}</strong>
+              <p class="muted">${escapeHtml(item.body)}</p>
+            </div>
+          `).join('')
+          : '<p class="muted">No public updates yet.</p>';
+      }
+
+      function renderOrganizerResults() {
+        const rankings = document.getElementById('organizer-rankings');
+        rankings.innerHTML = state.organizerResults.rankings.map((group) => `
+          <section class="card" style="margin:0 0 1rem;">
+            <h3>${escapeHtml(group.category)} — patrol ranking</h3>
+            ${group.patrols.length ? `
+              <div class="table-wrap">
+                <table>
+                  <thead><tr><th>Place</th><th>Patrol / institution</th><th>Section / gender</th><th>Total marks</th><th>Areas assessed</th></tr></thead>
+                  <tbody>${group.patrols.map((patrol) => `
+                    <tr class="${patrol.rank <= 3 ? 'top-ranking' : ''}">
+                      <td>${patrol.rank}${patrol.rank <= 3 ? ' — top 3' : ''}</td>
+                      <td><strong>${escapeHtml(patrol.patrolName)}</strong><br><span class="muted">${escapeHtml(patrol.schoolName)} · ${escapeHtml(patrol.patrolCode)}</span></td>
+                      <td>${escapeHtml(patrol.section)} / ${escapeHtml(patrol.gender)}</td>
+                      <td><strong>${patrol.scoreTotal} / ${patrol.maxTotal}</strong></td>
+                      <td>${patrol.assessmentCount}</td>
+                    </tr>
+                  `).join('')}</tbody>
+                </table>
+              </div>
+            ` : '<p class="muted">No scores submitted in this category yet.</p>'}
+          </section>
+        `).join('');
+
+        const assessments = state.organizerResults.assessments;
+        document.getElementById('organizer-assessments-empty').hidden = assessments.length > 0;
+        document.getElementById('organizer-assessments').innerHTML = assessments.map((assessment) => `
+          <tr>
+            <td>${new Date(assessment.endingAt).toLocaleString()}</td>
+            <td><strong>${escapeHtml(assessment.patrolName)}</strong><br><span class="muted">${escapeHtml(assessment.schoolName)} · ${escapeHtml(assessment.patrolCode)}</span></td>
+            <td>${escapeHtml(assessment.area)}<br><span class="muted">${escapeHtml(assessment.category)} · ${escapeHtml(assessment.section)} · ${escapeHtml(assessment.gender)}</span></td>
+            <td>${escapeHtml(assessment.assessorName)}</td>
+            <td><strong>${assessment.scoreTotal} / ${assessment.maxTotal}</strong></td>
+            <td>
+              <details>
+                <summary>View marks</summary>
+                <ul>${assessment.answers.map((answer) => `<li>${escapeHtml(answer.question)}: ${answer.score} / ${answer.maxMarks}</li>`).join('')}</ul>
+                ${assessment.notes ? `<p><strong>Assessor comments:</strong> ${escapeHtml(assessment.notes)}</p>` : ''}
+              </details>
+            </td>
+          </tr>
+        `).join('');
+      }
+
+      async function loadOrganizerResults() {
+        try {
+          state.organizerResults = await apiFetch('/api/organizer/assessment-results');
+          renderOrganizerResults();
+          setStatus('Assessment scores and category rankings are up to date.', false, 'organizer-results-message');
+        } catch (error) {
+          setStatus(error.message, true, 'organizer-results-message');
+        }
+      }
+
+      function renderPublicPage() {
+        const confirmed = state.publicPatrols;
+        document.getElementById('public-registrations').textContent = confirmed
+          .reduce((sum, patrol) => sum + Number(patrol.membersCount || 0), 0);
+        document.getElementById('public-schools').textContent = new Set(confirmed.map((item) => item.schoolName)).size;
+        document.getElementById('public-patrols').textContent = confirmed.length;
+
+        document.getElementById('public-schedule').innerHTML = eventSchedule.map((item) => `
+          <div class="schedule-row"><span class="schedule-time">${item.time}</span><span>${escapeHtml(item.title)}</span></div>
+        `).join('');
+
+        renderCountList('public-subcounties', subCounties, countBy(confirmed, 'subCounty'));
+        renderCountList('public-sections', scoutSections, countBy(confirmed, 'section'));
+        renderCountList('public-genders', ['Male', 'Female', 'Mixed'], countBy(confirmed, 'gender'));
+
+        const directory = document.getElementById('public-directory');
+        const search = document.getElementById('public-directory-search').value.trim().toLowerCase();
+        const matchingPatrols = confirmed.filter((item) => [
+          item.schoolName, item.patrolName, item.subCounty, item.category, item.section,
+        ].some((value) => String(value || '').toLowerCase().includes(search)));
+        directory.innerHTML = matchingPatrols.map((item) => `
+          <tr>
+            <td>${escapeHtml(item.schoolName)}</td>
+            <td>${escapeHtml(item.subCounty)}</td>
+            <td>${escapeHtml(item.patrolName)}</td>
+            <td>${escapeHtml(item.section)}</td>
+            <td>${escapeHtml(item.gender)}</td>
+            <td>${escapeHtml(item.category)}</td>
+          </tr>
+        `).join('');
+        document.getElementById('public-directory-empty').hidden = matchingPatrols.length !== 0;
+
+        renderPublicLeaderboard();
+        renderEventPhotos();
+
+        const news = (state.summary.news ?? []).filter((item) => item.isPublished !== false);
+        document.getElementById('public-news-feed').innerHTML = news.length
+          ? news.map((item) => `
+            <div class="news-item" style="margin-bottom:1rem;">
+              <strong>${escapeHtml(item.title)}</strong>
+              <p class="muted">${escapeHtml(item.body)}</p>
+            </div>
+          `).join('')
+          : '<p class="muted">No public announcements yet.</p>';
+      }
+
+      function renderPublicLeaderboard() {
+        const container = document.getElementById('public-leaderboard');
+        const hasRankedPatrols = state.publicLeaderboard.some((group) => group.patrols.length);
+        document.getElementById('public-leaderboard-status').textContent = hasRankedPatrols
+          ? 'Rankings reflect marks submitted so far.'
+          : 'No assessment scores have been submitted yet.';
+        container.innerHTML = state.publicLeaderboard.map((group) => `
+          <article class="card">
+            <h3>${escapeHtml(group.category)}</h3>
+            ${group.patrols.length ? `
+              <ol>${group.patrols.map((patrol) => `
+                <li>
+                  <strong>${escapeHtml(patrol.patrolName)}</strong>
+                  <br><span class="muted">${escapeHtml(patrol.schoolName)} · ${escapeHtml(patrol.section)} · ${escapeHtml(patrol.gender)}</span>
+                  <br><span class="data-value">${patrol.scoreTotal} / ${patrol.maxTotal} marks</span>
+                  <span class="muted">(${patrol.assessmentCount} areas assessed)</span>
+                </li>
+              `).join('')}</ol>
+            ` : '<p class="muted">Awaiting submitted scores.</p>'}
+          </article>
+        `).join('');
+      }
+
+      function renderEventPhotos() {
+        const container = document.getElementById('event-gallery');
+        document.getElementById('event-gallery-empty').hidden = state.eventPhotos.length > 0;
+        container.innerHTML = state.eventPhotos.map((photo) => `
+          <figure class="card gallery-photo">
+            <img src="${escapeHtml(photo.imageUrl)}" alt="${escapeHtml(photo.caption || 'Homa Bay Scouts Competition event photo')}" loading="lazy" />
+            <figcaption>${escapeHtml(photo.caption || 'Homa Bay Scouts Competition')}</figcaption>
+            ${state.currentUser?.role === 'organizer'
+              ? `<button type="button" class="secondary remove-event-photo" data-id="${escapeHtml(photo.id)}">Remove photo</button>`
+              : ''}
+          </figure>
+        `).join('');
+      }
+
+      async function loadPublicHighlights() {
+        try {
+          const [leaderboard, photos] = await Promise.all([
+            apiFetch('/api/public/leaderboard'),
+            apiFetch('/api/event-photos'),
+          ]);
+          state.publicLeaderboard = leaderboard;
+          state.eventPhotos = photos;
+          renderPublicLeaderboard();
+          renderEventPhotos();
+        } catch (error) {
+          setStatus(error.message, true, 'public-leaderboard-status');
+        }
+      }
+
+      function renderRegistrations() {
+        const tbody = document.getElementById('registrations-table');
+        tbody.innerHTML = state.registrations.map((item) => `
+          <tr>
+            <td>${escapeHtml(item.patrolName)}</td>
+            <td>${item.patrolCode ? `<span class="badge">${escapeHtml(item.patrolCode)}</span>` : '<span class="muted">Not generated</span>'}</td>
+            <td>${escapeHtml(item.schoolName)}</td>
+            <td>${escapeHtml(item.section)}</td>
+            <td>${escapeHtml(item.category)}</td>
+            <td>${escapeHtml(item.paymentStatus)}</td>
+            <td>${escapeHtml(item.registrationStatus)}</td>
+            <td>
+              ${item.paymentStatus !== 'Paid'
+                ? `<button type="button" class="secondary approve-payment" data-id="${escapeHtml(item.id)}">Approve payment</button>`
+                : item.registrationStatus !== 'Checked-In'
+                  ? `<button type="button" class="secondary check-in" data-id="${escapeHtml(item.id)}">Check in</button>`
+                  : `<span class="muted">${item.arrivalTime ? new Date(item.arrivalTime).toLocaleString() : 'Checked in'}</span>`}
+            </td>
+          </tr>
+        `).join('');
+
+      }
+
+      async function loadAssessmentPatrols() {
+        const select = document.getElementById('patrol-select');
+        const previousCode = select.value;
+        const query = new URLSearchParams({ area: document.getElementById('assessment-area').value });
+        try {
+          state.assessmentPatrols = await apiFetch(`/api/assessment-patrols?${query}`);
+          select.innerHTML = state.assessmentPatrols.length ? state.assessmentPatrols.map((item) => `
+            <option value="${escapeHtml(item.patrolCode)}" ${item.alreadyAssessed ? 'disabled' : ''}>${escapeHtml(item.patrolCode)}${item.alreadyAssessed ? ' — already assessed in this area' : ''}</option>
+          `).join('') : '<option value="" disabled selected>No issued patrol codes available</option>';
+          if (state.assessmentPatrols.some((item) => item.patrolCode === previousCode && !item.alreadyAssessed)) {
+            select.value = previousCode;
+          } else {
+            const nextAvailable = state.assessmentPatrols.find((item) => !item.alreadyAssessed);
+            select.value = nextAvailable?.patrolCode ?? '';
+          }
+          setAssessmentPatrolDetails();
+          await loadActiveRubric();
+          recordAssessmentStart();
+        } catch (error) {
+          state.assessmentPatrols = [];
+          select.innerHTML = '<option value="" disabled selected>Unable to load eligible patrols</option>';
+          setAssessmentPatrolDetails();
+          setStatus(error.message, true, 'assessment-message');
+        }
+      }
+
+      async function completeSignIn(credentials) {
+        const result = await apiFetch('/api/auth/login', {
+          method: 'POST',
+          body: JSON.stringify(credentials),
+        });
+        state.currentUser = result.user;
+        renderAuthStatus();
+        document.getElementById('auth-message').textContent = '';
+        authDialog.close();
+        if (result.user.role === 'assessor') {
+          await loadAssessmentPatrols();
+          navigateToPage('assessment');
+          promptAssessorPasswordSetup(result.user);
+        } else {
+          await loadData();
+          navigateToPage('public');
+        }
+      }
+
+      document.getElementById('open-login').addEventListener('click', () => {
+        document.getElementById('auth-login-mode').classList.remove('hidden');
+        document.getElementById('organizer-setup-form').classList.add('hidden');
+        document.getElementById('auth-message').textContent = '';
+        authDialog.showModal();
+      });
+      document.getElementById('header-sign-in').addEventListener('click', () => {
+        document.getElementById('open-login').click();
+      });
+      document.getElementById('setup-organizer').addEventListener('click', () => {
+        document.getElementById('auth-login-mode').classList.add('hidden');
+        document.getElementById('organizer-setup-form').classList.remove('hidden');
+        document.getElementById('auth-message').textContent = '';
+        authDialog.showModal();
+      });
+      document.getElementById('header-organizer-setup').addEventListener('click', () => {
+        document.getElementById('setup-organizer').click();
+      });
+      document.getElementById('show-organizer-setup').addEventListener('click', () => {
+        document.getElementById('auth-login-mode').classList.add('hidden');
+        document.getElementById('organizer-setup-form').classList.remove('hidden');
+      });
+      document.getElementById('cancel-organizer-setup').addEventListener('click', () => {
+        document.getElementById('organizer-setup-form').classList.add('hidden');
+        document.getElementById('auth-login-mode').classList.remove('hidden');
+      });
+      document.getElementById('close-auth').addEventListener('click', () => authDialog.close());
+      document.getElementById('close-credential').addEventListener('click', () => document.getElementById('credential-dialog').close());
+
+      document.getElementById('password-login-form').addEventListener('submit', async (event) => {
+        event.preventDefault();
+        const form = event.currentTarget;
+        const data = Object.fromEntries(new FormData(form).entries());
+        try {
+          await completeSignIn(data);
+          form.reset();
+        } catch (error) {
+          setStatus(error.message, true, 'auth-message');
+        }
+      });
+      document.getElementById('code-login-form').addEventListener('submit', async (event) => {
+        event.preventDefault();
+        const form = event.currentTarget;
+        const accessCode = new FormData(form).get('accessCode');
+        try {
+          await completeSignIn({ accessCode });
+          form.reset();
+        } catch (error) {
+          setStatus(error.message, true, 'auth-message');
+        }
+      });
+      document.getElementById('organizer-setup-form').addEventListener('submit', async (event) => {
+        event.preventDefault();
+        const form = event.currentTarget;
+        const data = Object.fromEntries(new FormData(form).entries());
+        try {
+          const result = await apiFetch('/api/auth/setup-organizer', {
+            method: 'POST',
+            body: JSON.stringify(data),
+          });
+          state.currentUser = result.user;
+          state.needsOrganizerSetup = false;
+          authDialog.close();
+          form.reset();
+          await loadData();
+          navigateToPage('dashboard');
+        } catch (error) {
+          setStatus(error.message, true, 'auth-message');
+        }
+      });
+      document.getElementById('header-logout').addEventListener('click', async () => {
+        try {
+          await apiFetch('/api/auth/logout', { method: 'POST' });
+          state.currentUser = null;
+          state.assessmentPatrols = [];
+          state.registrations = [];
+          state.organizerResults = { assessments: [], rankings: [] };
+          document.getElementById('assessment-form').reset();
+          state.scored.clear();
+          state.activeRubric = null;
+          signaturePads.forEach((pad) => clearSignature(pad.canvas.id));
+          renderAuthStatus();
+          renderDashboard();
+          renderRegistrations();
+          navigateToPage('public');
+        } catch (error) {
+          setStatus(error.message, true, 'account-status');
+        }
+      });
+
+      document.getElementById('refresh-organizer-results').addEventListener('click', loadOrganizerResults);
+      window.setInterval(() => {
+        if (state.currentUser?.role === 'organizer'
+            && document.getElementById('dashboard').classList.contains('active')) {
+          loadOrganizerResults();
+        }
+        if (document.getElementById('public').classList.contains('active')) {
+          loadPublicHighlights();
+        }
+      }, 30000);
+      document.getElementById('change-password').addEventListener('click', () => {
+        const form = document.getElementById('change-password-form');
+        form.classList.toggle('hidden');
+        form.elements.namedItem('currentPassword').required =
+          Boolean(state.currentUser?.hasPassword && !state.currentUser?.canChangePasswordWithoutCurrent);
+      });
+      document.getElementById('change-password-form').addEventListener('submit', async (event) => {
+        event.preventDefault();
+        const form = event.currentTarget;
+        const data = Object.fromEntries(new FormData(form).entries());
+        try {
+          await apiFetch('/api/auth/change-password', { method: 'POST', body: JSON.stringify(data) });
+          state.currentUser.hasPassword = true;
+          state.currentUser.canChangePasswordWithoutCurrent = false;
+          form.reset();
+          form.classList.add('hidden');
+          setStatus('Password updated.', false, 'password-message');
+        } catch (error) {
+          setStatus(error.message, true, 'password-message');
+        }
+      });
+      document.getElementById('assessor-create-form').addEventListener('submit', async (event) => {
+        event.preventDefault();
+        const form = event.currentTarget;
+        const data = Object.fromEntries(new FormData(form).entries());
+        try {
+          const result = await apiFetch('/api/assessors', { method: 'POST', body: JSON.stringify(data) });
+          document.getElementById('assessor-message').textContent = `Account created for ${result.assessor.name}.`;
+          showAccessCode(result.accessCode, result.temporaryPassword);
+          form.reset();
+          await loadAssessors();
+        } catch (error) {
+          setStatus(error.message, true, 'assessor-message');
+        }
+      });
+      document.getElementById('assessor-list').addEventListener('click', async (event) => {
+        const button = event.target.closest('.rotate-assessor-code, .disable-assessor, .enable-assessor');
+        if (!button) return;
+        try {
+          if (button.classList.contains('rotate-assessor-code')) {
+            const result = await apiFetch(`/api/assessors/${encodeURIComponent(button.dataset.id)}/rotate-code`, { method: 'POST' });
+            showAccessCode(result.accessCode);
+          } else {
+            const active = button.classList.contains('enable-assessor');
+            await apiFetch(`/api/assessors/${encodeURIComponent(button.dataset.id)}`, {
+              method: 'PATCH',
+              body: JSON.stringify({ active }),
+            });
+          }
+          await loadAssessors();
+        } catch (error) {
+          setStatus(error.message, true, 'assessor-message');
+        }
+      });
+      document.querySelectorAll('[data-image-area]').forEach((input) => {
+        input.addEventListener('change', async () => {
+          const file = input.files[0];
+          if (!file) return;
+          if (file.size > 1_000_000) {
+            setStatus('Images must be smaller than 1 MB.', true, 'account-status');
+            input.value = '';
+            return;
+          }
+          try {
+            const image = await new Promise((resolve, reject) => {
+              const reader = new FileReader();
+              reader.onload = () => resolve(reader.result);
+              reader.onerror = () => reject(new Error('Unable to read the selected image.'));
+              reader.readAsDataURL(file);
+            });
+            const result = await apiFetch(`/api/area-images/${input.dataset.imageArea}`, {
+              method: 'POST',
+              body: JSON.stringify({ image }),
+            });
+            document.getElementById(`${result.area}-area-image`).src = result.imageUrl;
+            setStatus('Area photo updated.', false, 'account-status');
+          } catch (error) {
+            setStatus(error.message, true, 'account-status');
+          } finally {
+            input.value = '';
+          }
+        });
+      });
+
+      document.getElementById('event-photo-form').addEventListener('submit', async (event) => {
+        event.preventDefault();
+        const form = event.currentTarget;
+        const file = form.elements.namedItem('image').files[0];
+        if (!file) return;
+        if (file.size > 1_000_000) {
+          setStatus('Event photos must be smaller than 1 MB.', true, 'event-photo-message');
+          return;
+        }
+        const submitButton = form.querySelector('[type="submit"]');
+        submitButton.disabled = true;
+        try {
+          const image = await new Promise((resolve, reject) => {
+            const reader = new FileReader();
+            reader.onload = () => resolve(reader.result);
+            reader.onerror = () => reject(new Error('Unable to read the selected photo.'));
+            reader.readAsDataURL(file);
+          });
+          await apiFetch('/api/event-photos', {
+            method: 'POST',
+            body: JSON.stringify({
+              image,
+              caption: form.elements.namedItem('caption').value,
+            }),
+          });
+          form.reset();
+          await loadPublicHighlights();
+          setStatus('Event photo uploaded and is now visible on the public page.', false, 'event-photo-message');
+        } catch (error) {
+          setStatus(error.message, true, 'event-photo-message');
+        } finally {
+          submitButton.disabled = false;
+        }
+      });
+      document.getElementById('event-gallery').addEventListener('click', async (event) => {
+        const button = event.target.closest('.remove-event-photo');
+        if (!button) return;
+        button.disabled = true;
+        try {
+          await apiFetch(`/api/event-photos/${encodeURIComponent(button.dataset.id)}`, { method: 'DELETE' });
+          await loadPublicHighlights();
+        } catch (error) {
+          button.disabled = false;
+          setStatus(error.message, true, 'event-photo-message');
+        }
+      });
+
+      async function loadData() {
+        try {
+          const [summary, news, auth, areaImages, publicPatrols, health] = await Promise.all([
+            apiFetch('/api/summary'),
+            apiFetch('/api/news'),
+            apiFetch('/api/auth/status'),
+            apiFetch('/api/area-images'),
+            apiFetch('/api/public/patrols'),
+            apiFetch('/api/health'),
+          ]);
+          state.demoMode = health.demoMode;
+          document.getElementById('demo-warning').hidden = !state.demoMode;
+          state.summary = { ...summary, news };
+          state.currentUser = auth.user;
+          state.needsOrganizerSetup = auth.needsOrganizerSetup;
+          state.publicPatrols = publicPatrols;
+          state.registrations = state.currentUser?.role === 'organizer'
+            ? await apiFetch('/api/registrations')
+            : [];
+          for (const area of ['registration', 'assessment']) {
+            document.getElementById(`${area}-area-image`).src = areaImages[area] || areaPlaceholder(area);
+          }
+          renderAuthStatus();
+          renderDashboard();
+          renderPublicPage();
+          promptAssessorPasswordSetup(state.currentUser);
+          await loadPublicHighlights();
+          renderRegistrations();
+          if (state.currentUser?.role === 'organizer') await loadOrganizerResults();
+          if (state.currentUser?.role === 'assessor') await loadAssessmentPatrols();
+          if (state.currentUser?.role === 'organizer') updatePatrolCodePreview();
+          else if (document.getElementById('public').classList.contains('active') === false) navigateToPage('public');
+        } catch (error) {
+          console.error(error);
+          document.getElementById('news-feed').textContent = 'Unable to load competition data.';
+          setStatus(error.message, true, 'registration-message');
+        }
+      }
+
+      document.getElementById('registration-form').addEventListener('submit', async (event) => {
+        event.preventDefault();
+        const form = event.currentTarget;
+        const data = Object.fromEntries(new FormData(form).entries());
+        data.specialNeeds = data.specialNeeds === 'true';
+        data.membersCount = Number(data.membersCount);
+        delete data.patrolCodePreview;
+        try {
+          const registration = await apiFetch('/api/registrations', {
+            method: 'POST',
+            body: JSON.stringify(data),
+          });
+          form.reset();
+          updatePatrolCodePreview();
+          await loadData();
+          setStatus(`Registration saved as pending payment approval. Patrol code: ${registration.patrolCode} (${registration.membersCount} patrol members).`, false);
+        } catch (error) {
+          setStatus(error.message, true, 'registration-message');
+        }
+      });
+
+      const registrationForm = document.getElementById('registration-form');
+      document.getElementById('public-directory-search').addEventListener('input', renderPublicPage);
+      ['section', 'category', 'gender', 'specialNeeds'].forEach((name) => {
+        registrationForm.elements.namedItem(name).addEventListener('change', () => {
+          if (state.currentUser?.role === 'organizer') updatePatrolCodePreview();
+        });
+      });
+      const assistantScoutLeader = registrationForm.elements.namedItem('assistantScoutLeader');
+      const assistantScoutLeaderMembershipNo = registrationForm.elements.namedItem('assistantScoutLeaderMembershipNo');
+      const updateAssistantScoutLeaderMembershipRequirement = () => {
+        assistantScoutLeaderMembershipNo.required = Boolean(assistantScoutLeader.value.trim());
+      };
+      assistantScoutLeader.addEventListener('input', updateAssistantScoutLeaderMembershipRequirement);
+      updateAssistantScoutLeaderMembershipRequirement();
+
+      let approvalRegistrationId = null;
+      const paymentDialog = document.getElementById('payment-dialog');
+      document.getElementById('registrations-table').addEventListener('click', (event) => {
+        const approvalButton = event.target.closest('.approve-payment');
+        if (approvalButton) {
+          approvalRegistrationId = approvalButton.dataset.id;
+          document.getElementById('payment-message').textContent = '';
+          document.getElementById('payment-approval-form').reset();
+          paymentDialog.showModal();
+          return;
+        }
+        const checkInButton = event.target.closest('.check-in');
+        if (!checkInButton) return;
+        apiFetch(`/api/registrations/${encodeURIComponent(checkInButton.dataset.id)}/check-in`, { method: 'POST' })
+          .then(async () => {
+            await loadData();
+            setStatus('Patrol checked in. Arrival time recorded.', false);
+          })
+          .catch((error) => setStatus(error.message, true, 'registration-message'));
+      });
+
+      document.getElementById('payment-cancel').addEventListener('click', () => {
+        approvalRegistrationId = null;
+        paymentDialog.close();
+      });
+
+      document.getElementById('payment-approval-form').addEventListener('submit', async (event) => {
+        event.preventDefault();
+        if (!approvalRegistrationId) return;
+        const submitButton = event.currentTarget.querySelector('[type="submit"]');
+        submitButton.disabled = true;
+        try {
+          const receiptNumber = new FormData(event.currentTarget).get('receiptNumber');
+          const approved = await apiFetch(`/api/registrations/${encodeURIComponent(approvalRegistrationId)}/approve-payment`, {
+            method: 'POST',
+            body: JSON.stringify({ receiptNumber }),
+          });
+          paymentDialog.close();
+          approvalRegistrationId = null;
+          await loadData();
+          setStatus(`Payment approved for patrol code ${approved.patrolCode}.`, false);
+        } catch (error) {
+          setStatus(error.message, true, 'payment-message');
+        } finally {
+          submitButton.disabled = false;
+        }
+      });
+
+      document.getElementById('patrol-select').addEventListener('change', () => {
+        document.getElementById('assessment-starting-at').value = '';
+        setAssessmentPatrolDetails();
+        loadActiveRubric();
+        recordAssessmentStart();
+      });
+      document.getElementById('assessment-area').addEventListener('change', () => {
+        document.getElementById('assessment-starting-at').value = '';
+        loadAssessmentPatrols();
+      });
+      document.getElementById('active-rubric-questions').addEventListener('change', (event) => {
+        const select = event.target.closest('.criterion-score');
+        if (!select || !state.activeRubric) return;
+        const criterionId = select.dataset.criterionId;
+        if (select.value === '') {
+          state.scored.delete(criterionId);
+          updateAssessmentTotal();
+          return;
+        }
+        const score = Number(select.value);
+        state.scored.set(criterionId, score);
+        updateAssessmentTotal();
+      });
+
+      document.getElementById('add-criterion').addEventListener('click', () => addTemplateCriterion());
+      document.getElementById('template-criteria').addEventListener('click', (event) => {
+        const button = event.target.closest('.remove-criterion');
+        if (!button) return;
+        if (document.querySelectorAll('.template-criterion').length === 1) {
+          setStatus('A rubric must have at least one question.', true, 'template-message');
+          return;
+        }
+        button.closest('.template-criterion').remove();
+        updateTemplateTotal();
+      });
+      document.getElementById('template-form').addEventListener('submit', async (event) => {
+        event.preventDefault();
+        const form = event.currentTarget;
+        const criteria = [...document.querySelectorAll('.template-criterion')].map((row) => ({
+          question: row.querySelector('[data-field="question"]').value.trim(),
+          maxMarks: Number(row.querySelector('[data-field="maxMarks"]').value),
+        }));
+        const data = Object.fromEntries(new FormData(form).entries());
+        data.criteria = criteria;
+        const submitButton = form.querySelector('[type="submit"]');
+        submitButton.disabled = true;
+        try {
+          const template = await apiFetch('/api/assessment-templates', {
+            method: 'POST',
+            body: JSON.stringify(data),
+          });
+          setStatus(`Saved “${template.title}” version ${template.version} (${template.totalMarks} marks).`, false, 'template-message');
+          const activeAssessmentForm = document.getElementById('assessment-form');
+          activeAssessmentForm.elements.area.value = template.area;
+          await loadActiveRubric();
+        } catch (error) {
+          setStatus(error.message, true, 'template-message');
+        } finally {
+          submitButton.disabled = false;
+        }
+      });
+
+      document.querySelectorAll('.clear-signature').forEach((button) => {
+        button.addEventListener('click', () => clearSignature(button.dataset.canvas));
+      });
+
+      document.getElementById('assessment-form').addEventListener('submit', async (event) => {
+        event.preventDefault();
+        const form = event.currentTarget;
+        if (!state.activeRubric) {
+          setStatus('There is no active scoring rubric for this patrol and assessment area.', true, 'assessment-message');
+          return;
+        }
+        if (state.scored.size !== state.activeRubric.criteria.length) {
+          setStatus('Tap a score for every question before submitting.', true, 'assessment-message');
+          return;
+        }
+        const assessorSignature = signaturePads.get('assessor-signature');
+        if (!assessorSignature?.signed) {
+          setStatus('The assessor must sign before submitting.', true, 'assessment-message');
+          return;
+        }
+        const data = Object.fromEntries(new FormData(form).entries());
+        data.startingAt = new Date(document.getElementById('assessment-starting-at').value).toISOString();
+        data.templateId = state.activeRubric.id;
+        data.answers = state.activeRubric.criteria.map((criterion) => ({
+          criterionId: criterion.id,
+          score: state.scored.get(criterion.id),
+        }));
+        data.assessorSignature = assessorSignature.canvas.toDataURL('image/png');
+        const submitButton = document.getElementById('save-assessment');
+        submitButton.disabled = true;
+        try {
+          const assessment = await apiFetch('/api/assessments', {
+            method: 'POST',
+            body: JSON.stringify(data),
+          });
+          document.getElementById('assessment-ending-at').value = localDateTimeValue(new Date(assessment.endingAt));
+          state.scored.clear();
+          document.querySelectorAll('.criterion-score').forEach((select) => { select.value = ''; });
+          signaturePads.forEach((pad) => clearSignature(pad.canvas.id));
+          document.getElementById('assessment-starting-at').value = '';
+          updateAssessmentTotal();
+          await loadData();
+          document.getElementById('assessment-total').textContent = `Submitted score: ${assessment.scoreTotal} / ${assessment.maxTotal}`;
+          const nextStep = state.assessmentPatrols.length
+            ? 'Choose the next eligible patrol code.'
+            : 'There are no more eligible patrols for this area.';
+          setStatus(`Assessment submitted. ${nextStep}`, false, 'assessment-message');
+        } catch (error) {
+          setStatus(error.message, true, 'assessment-message');
+        } finally {
+          submitButton.disabled = false;
+        }
+      });
+
+      window.addEventListener('resize', () => {
+        signaturePads.forEach((pad) => initializeSignaturePad(pad.canvas));
+      });
+      document.getElementById('template-criteria').replaceChildren();
+      addTemplateCriterion();
+      initializeSignaturePads();
+      loadData();
+    </script>
+  </body>
+</html>

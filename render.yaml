@@ -1,0 +1,16 @@
+services:
+  - type: web
+    name: scoutrix-ksa-competition-free
+    runtime: node
+    plan: free
+    region: frankfurt
+    buildCommand: npm ci && npm run build
+    startCommand: npm start
+    healthCheckPath: /api/health
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: DEMO_MODE
+        value: "true"
+      - key: ORGANIZER_SETUP_KEY
+        generateValue: true

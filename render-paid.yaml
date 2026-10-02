@@ -1,0 +1,22 @@
+services:
+  - type: web
+    name: scoutrix-ksa-competition
+    runtime: node
+    plan: starter
+    region: frankfurt
+    buildCommand: npm ci && npm run build
+    startCommand: npm start
+    healthCheckPath: /api/health
+    disk:
+      name: scoutrix-competition-data
+      mountPath: /opt/render/project/src/data
+      sizeGB: 1
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: DATA_DIR
+        value: /opt/render/project/src/data
+      - key: DEMO_MODE
+        value: "false"
+      - key: ORGANIZER_SETUP_KEY
+        generateValue: true
