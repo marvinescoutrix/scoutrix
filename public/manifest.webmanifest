@@ -1,0 +1,19 @@
+{
+  "id": "/",
+  "name": "KSA Competition Management",
+  "short_name": "KSA Competition",
+  "description": "Manage Homa Bay County scout competition registration and assessment.",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#f7f9f7",
+  "theme_color": "#007a3d",
+  "icons": [
+    {
+      "src": "/app-icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}

@@ -15,6 +15,14 @@ To deploy:
 
 The initial request can take about a minute while the free service wakes up. A deployable public URL cannot be assigned until the project is pushed to a Git provider and deployed from a Render account.
 
+## Install on Android
+
+1. Open the live website in Chrome on the Android phone: <https://scoutrix-ksa-competition-free.onrender.com/>.
+2. Open Chrome's three-dot menu and tap **Install app** (or **Add to Home screen**), then confirm.
+3. Launch **KSA Competition** from the new home-screen icon. It opens in an app-style window and still needs an internet connection.
+
+The installed shortcut uses the same live website and account; it is not a separate offline app. Do not use this free demo for real participant records.
+
 ## Paid hosting for real competition data
 
 The separate [paid Render Blueprint](./render-paid.yaml) attaches a persistent disk for the JSON database and uploaded photos. To use it, select `render-paid.yaml` as the Blueprint file when creating the paid service, or update the existing service configuration to match it. The persistent disk is not a backup; arrange regular backups before using real records.
