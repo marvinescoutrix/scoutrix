@@ -90,16 +90,6 @@
       }
       .page { display: none; }
       .page.active { display: block; animation: page-enter 180ms ease-out; }
-      .demo-warning {
-        margin: 1rem auto 0;
-        max-width: 1370px;
-        padding: 0.85rem 1rem;
-        border: 2px solid var(--ksa-red);
-        border-radius: 12px;
-        background: #fff2f3;
-        color: var(--ksa-black);
-        font-weight: 700;
-      }
       @keyframes page-enter { from { opacity: 0.7; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
       .grid { display: grid; gap: 1.15rem; grid-template-columns: repeat(auto-fit, minmax(min(100%, 245px), 1fr)); }
       .card {
@@ -252,10 +242,6 @@
         <button type="button" class="secondary" id="header-logout" hidden>Sign out</button>
       </nav>
     </header>
-
-    <aside id="demo-warning" class="demo-warning" role="status" hidden>
-      Free demo hosting can erase registrations, scores, accounts, and uploaded photos when the service sleeps or restarts. Use sample data only; move to persistent paid hosting before entering real competition information.
-    </aside>
 
     <main>
       <section id="dashboard" class="page">
@@ -773,7 +759,7 @@
     </main>
 
     <script>
-      const state = { registrations: [], publicPatrols: [], publicLeaderboard: [], eventPhotos: [], assessmentPatrols: [], organizerResults: { assessments: [], rankings: [] }, summary: {}, activeRubric: null, scored: new Map(), currentUser: null, needsOrganizerSetup: false, demoMode: false };
+      const state = { registrations: [], publicPatrols: [], publicLeaderboard: [], eventPhotos: [], assessmentPatrols: [], organizerResults: { assessments: [], rankings: [] }, summary: {}, activeRubric: null, scored: new Map(), currentUser: null, needsOrganizerSetup: false };
       const signaturePads = new Map();
       const subCounties = [
         'Rachuonyo South', 'Kasipul', 'Ndhiwa', 'Mbita', 'Homa Bay Town', 'Rangwe',
@@ -1644,16 +1630,13 @@
 
       async function loadData() {
         try {
-          const [summary, news, auth, areaImages, publicPatrols, health] = await Promise.all([
+          const [summary, news, auth, areaImages, publicPatrols] = await Promise.all([
             apiFetch('/api/summary'),
             apiFetch('/api/news'),
             apiFetch('/api/auth/status'),
             apiFetch('/api/area-images'),
             apiFetch('/api/public/patrols'),
-            apiFetch('/api/health'),
           ]);
-          state.demoMode = health.demoMode;
-          document.getElementById('demo-warning').hidden = !state.demoMode;
           state.summary = { ...summary, news };
           state.currentUser = auth.user;
           state.needsOrganizerSetup = auth.needsOrganizerSetup;
